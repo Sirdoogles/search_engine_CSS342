@@ -18,6 +18,7 @@ vector<string> testTexts() {
 TEST(search_engine, single_word_search) {
 
     MyMiniSearchEngine engine(testTexts());
+    engine.printIndex();
 
     vector<int> result = engine.search("seattle");
     ASSERT_EQ(result.size(), 1);

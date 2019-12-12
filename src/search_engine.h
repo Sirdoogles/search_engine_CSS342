@@ -60,7 +60,6 @@ private:
         int numOfDoc = (*pData).size();
         for (int i = 0; i < numOfDoc; ++i) {
 
-            cout << "Document " << i << ":" << endl;
             string doc = (*pData)[i];
 
             // split the document by white spaces
@@ -71,49 +70,15 @@ private:
              *  j = current token in document.
              *
              */
-
-
             // homework: generate index for search
             int numOfWords = (*words).size();
             for (int j = 0; j < numOfWords; j++)
             {
                 string currentWord = (*words)[j];
-                // Check if the current word has been indexed. If not, created new entry.
-
-                if(indexes.count(currentWord) == 0)
-                {
-                    cout << "[NEW]String '"<< currentWord <<"' does not exist. Make a new key. Document " << i << " For location " << j << endl;
-
-                    // Build temp. vectors here to add to hashmap
-                    vector<vector<int>> wordInDoc; // Temp vector to store the doc ID that contains string.
-                    vector<int> wordLocation; // Temp vector to store locations of string in doc.
-
-                    wordLocation.push_back(j); // Push location of string
-
-                    vector<vector<int>>::iterator it = wordInDoc.begin(); // Create iterator for wordInDoc vector. Each index location represents doc ID.
-
-                    wordInDoc.insert(it , wordLocation); //TODO change insertion
-                    indexes.insert(pair<string, vector<vector<int>>>(currentWord, wordInDoc)); // Create new entry.
-
-
-                }
-                // If string exists. Append current location.
-                else{
-
-                    cout << "[EXIST]String '"<< currentWord <<"' exists in document "<< i <<". append location " << j << endl;
-
-                    /*
-                    vector<vector<int>> wordInDoc = indexes[currentWord];
-
-                    vector<int> wordLocation = wordInDoc[i];
-
-                    wordLocation.push_back(j);
-                    */
-                }
+                indexes.insert(pair<string, vector<vector<int>>>(currentWord, vector<vector<int>>(numOfDoc))); // Create new entry.
+                indexes[currentWord][i].push_back(j);
 
             }
-
-
         }
 #ifdef PRINT
         printIndex();
@@ -156,7 +121,38 @@ public:
     // return pointer to an empty vector if search() finds no match in all files
     vector<int> search(const string &searchKey) {
         // homework
-        return vector<int>(-1);   // place holder
+        unique_ptr<string> s = make_unique<string>(searchKey);
+        // Converts input key to lowercase. This makes it case-insensitive.
+        for_each(s->begin(), s->end(), [](char &c) {
+            c = ::tolower(c);
+        });
+        vector<int> docResult;
+        // Split *s by white spaces if input has more than 1 word.
+        unique_ptr<vector<string>> words = splitByWhiteSpaces(*s);
+        int numOfSearch = (*words).size();
+        std::cout << (*words)[0] << std::endl;
+
+        if(numOfSearch == 1) // Runs if it is a single word search.
+        {
+            string current = (*words)[0];
+            vector<vector<int>> wordLocations = indexes[current];
+            //vector<vector<int>>::iterator ptr;
+            int wlSize = wordLocations.size();
+
+            for(int i = 0; i < wlSize; i++)
+            {
+                if(!wordLocations[i].empty())
+                {
+                    std::cout << "Hit at document " << i << std::endl;
+                    docResult.push_back(i);
+                }
+            }
+        }
+        // Runs if it is multi-word search.
+        else{
+
+        }
+        return docResult;   // place holder
     }
 };
 
