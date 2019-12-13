@@ -85,6 +85,15 @@ private:
 #endif
     }
 
+    vector<int> intersection(vector<int> v1, vector<int> v2)
+    {
+        vector<int> intersectVector;
+
+        set_intersection(v1.begin(),v1.end(),v2.begin(),v2.end(),back_inserter(intersectVector));
+        return intersectVector;
+    }
+
+
 public:
     MyMiniSearchEngine() = delete;
 
@@ -130,20 +139,17 @@ public:
         // Split *s by white spaces if input has more than 1 word.
         unique_ptr<vector<string>> words = splitByWhiteSpaces(*s);
         int numOfSearch = (*words).size();
-        std::cout << (*words)[0] << std::endl;
-
         if(numOfSearch == 1) // Runs if it is a single word search.
         {
             string current = (*words)[0];
             vector<vector<int>> wordLocations = indexes[current];
-            //vector<vector<int>>::iterator ptr;
+
             int wlSize = wordLocations.size();
 
             for(int i = 0; i < wlSize; i++)
             {
                 if(!wordLocations[i].empty())
                 {
-                    std::cout << "Hit at document " << i << std::endl;
                     docResult.push_back(i);
                 }
             }
@@ -151,8 +157,50 @@ public:
         // Runs if it is multi-word search.
         else{
 
+            vector<int> intersectDoc = search((*words)[0]);
+
+            // Find the documents which contains all of the terms.
+            for(int i = 1; i < numOfSearch; i++)
+            {
+                vector<int> tempIntersect = search((*words)[i]);
+                intersectDoc = intersection(intersectDoc, tempIntersect);
+            }
+            // intersectDoc vector now contains the doc ID's that may be sutible for a search hit.
+
+            int intersectDocSize = intersectDoc.size();
+
+            // Iterates for each document that contains all terms.
+            for (int j = 0; j < intersectDocSize; j++)
+            {
+                int currentDoc = intersectDoc[j]; // Stores the desired doc ID.
+
+                string firstTerm = (*words)[0]; // Stores the first term of the search query.
+                vector<vector<int>> wordLocations = indexes[firstTerm]; // Selects the documents associated with the first term of the query.
+                vector<int> wordPositionsInDoc = wordLocations[currentDoc]; // Select the vector associated with the desired document.
+
+                // Iterates for the other search terms beyond the first.
+                for(int k = 1; k < numOfSearch; k++)
+                {
+                    string tempTerm = (*words)[k]; // Stores the current term. (Must be beyond the first).
+                    vector<vector<int>> wordLocationsTemp = indexes[tempTerm]; // Selects the documents associated with the current term of the query.
+                    vector<int> wordPositionsInDocTemp = wordLocationsTemp[currentDoc];
+
+                    for(int l = 0; l < wordPositionsInDocTemp.size(); l++)
+                    {
+                        wordPositionsInDocTemp[l] = wordPositionsInDocTemp[l] - k; // Subtract each int in the vector by k.
+                    }
+
+                    wordPositionsInDoc = intersection(wordPositionsInDoc, wordPositionsInDocTemp); // Intersect the temp vector with the first one.
+                }
+
+                // If the vector is not empty, then match found,
+                if(!wordPositionsInDoc.empty())
+                {
+                    docResult.push_back(currentDoc);
+                }
+            }
         }
-        return docResult;   // place holder
+        return docResult;
     }
 };
 
